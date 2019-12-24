@@ -6,13 +6,51 @@ import {
   Input
 } from '../Utils/Utils';
 import TokenService from '../../services/token-service';
+import AuthApiService from '../../services/auth-api-service';
 
 export default class LoginForm extends Component {
   static defaultProps = {
     onLoginSuccess: () => {}
   };
 
+  handleSubmitJwtAuth = ev => {
+    //prevent default and set error state to null
+    ev.preventDefault();
+    this.setState({ error: null });
+    const {
+      user_name,
+      password
+    } = ev.target;
+
+    AuthApiService.postLogin({
+      user_name: user_name.value,
+      password: password.value
+    })
+      .then(res => {
+        //clear the fields on the page
+        user_name.value = '';
+        password.value = '';
+        //save the token
+        console.log(res);
+        TokenService.saveAuthToken(
+          res.authToken
+        );
+        //do other success stuff
+        console.log('token saved jwt');
+
+        this.props.onLoginSuccess();
+      })
+      .catch(res => {
+        this.setState({
+          error: res.error
+        });
+      });
+  };
+
+  // constructor() {
+  //   super();
   state = { error: null };
+  // }
 
   handleSubmitBasicAuth = ev => {
     ev.preventDefault();
@@ -42,7 +80,7 @@ export default class LoginForm extends Component {
       <form
         className="LoginForm"
         onSubmit={
-          this.handleSubmitBasicAuth
+          this.handleSubmitJwtAuth
         }
       >
         <div role="alert">
